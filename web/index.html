@@ -15,15 +15,15 @@
 <body>
   <main>
     <h1>Welcome to Invoice Wizard</h1>
-    <form>
+    <form onsubmit="handleSubmit(event)">
 
       <div class="mb-3">
         <label for="invoiceTo" class="form-label">To</label>
-        <input type="text" class="form-control" id="invoiceTo">
+        <input type="text" class="form-control" name="invoiceTo" id="invoiceTo">
       </div>
       <div class="mb-3">
         <label for="invoiceAmount" class="form-label">Amount</label>
-        <input type="number" class="form-control" id="invoiceAmount">
+        <input type="number" class="form-control" name="invoiceAmount" id="invoiceAmount">
       </div>
 
       <button type="submit" class="btn btn-primary">Submit</button>
