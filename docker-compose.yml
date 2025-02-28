@@ -12,6 +12,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: pword
     volumes:
       - ./db:/data/db
+    networks:
+      - app-network
 
   broker:
     image: apache/kafka:latest
@@ -19,6 +21,11 @@ services:
     container_name: broker
     ports:
       - 9092:9092
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
     environment:
@@ -49,7 +56,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - broker
+      broker:
+        condition: service_healthy
 
   persister:
     build:
@@ -58,7 +66,10 @@ services:
     networks:
       - app-network
     depends_on:
-      - broker
+      mongodb:
+        condition: service_started
+      broker:
+        condition: service_healthy
 
   web:
     build:
