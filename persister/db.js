@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://mongo:pword@mongodb:27017/invoices");
+mongoose.connect("mongodb://mongodb:27017/invoices");
 
 const nameSchema = new mongoose.Schema({
   id: String,
