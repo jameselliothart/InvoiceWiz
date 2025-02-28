@@ -2,10 +2,18 @@ const mongoose = require("mongoose");
 
 mongoose.connect("mongodb://mongodb:27017/invoices");
 
-const nameSchema = new mongoose.Schema({
-  id: String,
-  to: String,
-  amount: Number,
-});
+const invoiceSchema = new mongoose.Schema(
+  {
+    _id: { type: String, required: true },
+    To: { type: String, required: true },
+    Amount: { type: Number, required: true },
+  },
+  { _id: false }
+);
 
-exports.Invoice = mongoose.model('Invoice', nameSchema);
+exports.messageToUpdateParams = msg => {
+  const params = {...msg};
+  delete params.Id;
+  return params;
+}
+exports.Invoice = mongoose.model('Invoice', invoiceSchema);
