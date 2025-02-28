@@ -6,6 +6,7 @@
     "license": "MIT",
     "main": "app.js",
     "dependencies": {
-        "kafkajs": "^2.2.4"
+        "kafkajs": "^2.2.4",
+        "mongoose": "^8.11.0"
     }
 }
