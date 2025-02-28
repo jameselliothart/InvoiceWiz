@@ -1,6 +1,18 @@
 version: '3.8'
 
 services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: pword
+    volumes:
+      - ./db:/data/db
+
   broker:
     image: apache/kafka:latest
     hostname: broker
@@ -34,6 +46,15 @@ services:
     ports:
       - "8080:8080" # Exposes the backend API
       - "8081:8081" # For HTTPS if needed
+    networks:
+      - app-network
+    depends_on:
+      - broker
+
+  persister:
+    build:
+      context: ./persister
+      dockerfile: Dockerfile
     networks:
       - app-network
     depends_on:

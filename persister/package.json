@@ -1,0 +1,11 @@
+{
+    "name": "invoice-wiz-persister",
+    "version": "1.0.0",
+    "description": "InvoiceWiz persister service",
+    "author": "James Hart <jeh@duck.com>",
+    "license": "MIT",
+    "main": "app.js",
+    "dependencies": {
+        "kafkajs": "^2.2.4"
+    }
+}
