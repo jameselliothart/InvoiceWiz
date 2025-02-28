@@ -8,12 +8,14 @@ async function handleSubmit(event) {
     amount: Number(event.target.invoiceAmount.value),
   };
   try {
+    const body = JSON.stringify(msg);
+    console.log(`Sending ${URI_INVOICE}: ${body}`);
     const response = await fetch(URI_INVOICE, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(msg),
+      body,
     });
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
