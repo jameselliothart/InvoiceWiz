@@ -16,10 +16,11 @@ const kafka = require('./kafka');
 async function generateSignedUrl(s3Client, bucket, key) {
   try {
     const getObjectCommand = new GetObjectCommand({ Bucket: bucket, Key: key });
-    const getObjectUrl = await getSignedUrl(
+    const objectUrl = await getSignedUrl(
       s3Client, getObjectCommand, { expiresIn: 3600, responseContentDisposition: 'inline' }
     );
-    return getObjectUrl;
+    const exposedUrl = objectUrl.replace('localstack', 'localhost');
+    return exposedUrl;
   } catch (error) {
     console.error(`Error generating signed URL for ${key}:`, error);
     return null;
