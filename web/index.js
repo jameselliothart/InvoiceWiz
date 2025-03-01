@@ -1,9 +1,12 @@
-const URI_INVOICE = 'http://localhost:8080/api/invoice';
+const BASE_URI = 'http://localhost:8080/api';
+const URI_INVOICE = `${BASE_URI}/invoice`;
+const URI_SIGNALR = `${BASE_URI}/live`;
 
 async function handleSubmit(event) {
   event.preventDefault();
+  const id = crypto.randomUUID();
   const msg = {
-    id: crypto.randomUUID(),
+    id,
     to: event.target.invoiceTo.value,
     amount: Number(event.target.invoiceAmount.value),
   };
@@ -17,6 +20,7 @@ async function handleSubmit(event) {
       },
       body,
     });
+    document.getElementById('invoiceId').value = id;
     if (!response.ok) {
       throw new Error(`Response status: ${response.status}`);
     }
@@ -39,3 +43,37 @@ async function getInvoices() {
     console.error(error.message);
   }
 }
+
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl(URI_SIGNALR)
+  .configureLogging(signalR.LogLevel.Information)
+  .build();
+
+async function start() {
+  try {
+    await connection.start();
+    console.log("SignalR Connected.");
+  } catch (err) {
+    console.log(err);
+    setTimeout(start, 5000);
+  }
+};
+
+connection.onclose(async () => {
+  await start();
+});
+
+connection.on("ReceiveInvoice", (id, location) => {
+  console.log(`ReceiveInvoice: ${id} : ${location}`);
+  const currentId = document.getElementById('invoiceId').value;
+  if (id !== currentId) {
+    console.log(`ReceiveInvoice: id does not match current invoice id: ${currentId}`);
+    return
+  }
+  const downloadButton = document.getElementById("buttonDownload");
+  console.log(`ReceiveInvoice: modifying ${downloadButton}`);
+  downloadButton.href = location;
+  downloadButton.disabled = false;
+});
+
+start();
