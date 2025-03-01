@@ -71,10 +71,15 @@ connection.on("ReceiveInvoice", (id, location) => {
     return
   }
   const downloadButton = document.getElementById("buttonDownload");
-  console.log(`ReceiveInvoice: modifying ${downloadButton}`);
   downloadButton.href = location;
   downloadButton.classList.remove('btn-secondary', 'disabled');
   downloadButton.classList.add('btn-success');
+
+  Toastify({
+    text: "Click here to download your invoice!",
+    destination: location,
+    duration: 3000,
+    }).showToast();
 });
 
 start();
