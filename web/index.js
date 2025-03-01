@@ -73,7 +73,8 @@ connection.on("ReceiveInvoice", (id, location) => {
   const downloadButton = document.getElementById("buttonDownload");
   console.log(`ReceiveInvoice: modifying ${downloadButton}`);
   downloadButton.href = location;
-  downloadButton.disabled = false;
+  downloadButton.classList.remove('btn-secondary', 'disabled');
+  downloadButton.classList.add('btn-success');
 });
 
 start();
