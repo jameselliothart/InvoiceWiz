@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton((_) =>
 {
     var topic = "invoices";
-    var config = new ProducerBuilder<Guid, InvoiceRequested>(
+    var config = new ProducerBuilder<string, InvoiceRequested>(
         new ProducerConfig
         {
             BootstrapServers = "broker:29092",
@@ -24,7 +24,7 @@ builder.Services.AddSingleton((_) =>
             MessageTimeoutMs = 5000, // Timeout for message delivery (in milliseconds)
             Acks = Acks.All
         }
-    ).SetKeySerializer(new GuidSerializer())
+    )
     .SetValueSerializer(new InvoiceRequestedSerializer())
     .Build();
     return new Publisher(topic, config);

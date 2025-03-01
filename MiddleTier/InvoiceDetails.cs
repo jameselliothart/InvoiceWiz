@@ -15,11 +15,3 @@ public class InvoiceRequestedSerializer : ISerializer<InvoiceRequested>
         return Encoding.UTF8.GetBytes(jsonString); // Convert JSON string to byte[]
     }
 }
-
-public class GuidSerializer : ISerializer<Guid>
-{
-    public byte[] Serialize(Guid data, SerializationContext context)
-    {
-        return data.ToByteArray(); // Converts Guid to 16-byte array
-    }
-}
