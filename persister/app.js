@@ -15,7 +15,7 @@ async function init() {
       const invoice = JSON.parse(messageValue);
       const updateParams = messageToUpdateParams(invoice);
       const doc = await Invoice.findOneAndUpdate({ '_id': invoice.Id }, updateParams, { upsert: true, new: true });
-      console.log(`modified ${Invoice.db.name}.${Invoice.collection.name}: ${doc.toJSON()}`);
+      console.log(`modified ${Invoice.db.name}.${Invoice.collection.name}: ${JSON.stringify(doc.toJSON())}`);
     },
   });
 }

@@ -83,6 +83,18 @@ services:
       broker:
         condition: service_healthy
 
+  generator:
+    build:
+      context: ./generator
+      dockerfile: Dockerfile
+    networks:
+      - app-network
+    depends_on:
+      localstack:
+        condition: service_started
+      broker:
+        condition: service_healthy
+
   web:
     build:
       context: ./web
