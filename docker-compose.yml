@@ -17,7 +17,7 @@ services:
     ports:
       - 9092:9092
     healthcheck:
-      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,6 +40,19 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  kafka-init:
+    image: apache/kafka:latest
+    depends_on:
+      broker:
+        condition: service_healthy
+    networks:
+      - app-network
+    entrypoint: [ "sh", "-c" ]
+    command: >
+      "/opt/kafka/bin/kafka-topics.sh --bootstrap-server broker:29092 --create --topic invoices --partitions 1 --replication-factor 1 --if-not-exists &&
+       /opt/kafka/bin/kafka-topics.sh --bootstrap-server broker:29092 --create --topic invoices-generated --partitions 1 --replication-factor 1 --if-not-exists &&
+       echo 'Topics created successfully'"
 
   localstack:
     container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
@@ -80,6 +93,8 @@ services:
         condition: service_started
       broker:
         condition: service_healthy
+      kafka-init:
+        condition: service_started
 
   generator:
     build:
