@@ -14,7 +14,7 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(AllowDevAccessPolicy, policy =>
-        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+        policy.WithOrigins("http://localhost:80")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
@@ -80,5 +80,5 @@ app.MapPost(invoiceRoute, async ([FromBody] InvoiceRequested invoiceDetails, Pub
 });
 
 app.UseCors(AllowDevAccessPolicy);
-app.MapHub<InvoiceHub>("/api/live");
+app.MapHub<InvoiceHub>("/invoiceHub");
 app.Run();

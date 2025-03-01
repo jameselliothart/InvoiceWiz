@@ -1,6 +1,5 @@
-const BASE_URI = 'http://localhost:8080/api';
-const URI_INVOICE = `${BASE_URI}/invoice`;
-const URI_SIGNALR = `${BASE_URI}/live`;
+const URI_INVOICE = '/api/invoice';
+const URI_SIGNALR = '/invoiceHub';
 
 async function handleSubmit(event) {
   event.preventDefault();

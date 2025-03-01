@@ -73,9 +73,6 @@ services:
     build:
       context: ./MiddleTier
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080" # Exposes the backend API
-      - "8081:8081" # For HTTPS if needed
     networks:
       - app-network
     depends_on:
