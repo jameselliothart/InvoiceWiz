@@ -1,5 +1,6 @@
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using MiddleTier;
 
 var AllowDevAccessPolicy = "allowDevAccessPolicy";
@@ -9,14 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(AllowDevAccessPolicy, policy => policy.AllowAnyOrigin().AllowAnyHeader());
+    options.AddPolicy(AllowDevAccessPolicy, policy =>
+        policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+    );
 });
 builder.Services.AddSingleton((_) =>
 {
     var topic = "invoices";
-    var config = new ProducerBuilder<string, InvoiceRequested>(
+    var producer = new ProducerBuilder<string, InvoiceRequested>(
         new ProducerConfig
         {
             BootstrapServers = "broker:29092",
@@ -27,7 +34,28 @@ builder.Services.AddSingleton((_) =>
     )
     .SetValueSerializer(new InvoiceRequestedSerializer())
     .Build();
-    return new Publisher(topic, config);
+    return new Publisher(topic, producer);
+});
+builder.Services.AddSingleton(_ =>
+{
+    var consumer = new ConsumerBuilder<string, string>(
+        new ConsumerConfig
+        {
+            BootstrapServers = "broker:29092",
+            GroupId = "group-invoice-mt",
+            ClientId = "InvoiceWizConsumer", // Helps with debugging and monitoring
+            AutoOffsetReset = AutoOffsetReset.Earliest,
+            EnableAutoCommit = true,
+        }
+    ).Build();
+    return consumer;
+});
+builder.Services.AddHostedService(sp =>
+{
+    var topic = "invoices-generated";
+    var consumer = sp.GetRequiredService<IConsumer<string, string>>();
+    var hubContext = sp.GetRequiredService<IHubContext<InvoiceHub>>();
+    return new Subscriber(topic, consumer, hubContext);
 });
 
 var app = builder.Build();
@@ -52,4 +80,5 @@ app.MapPost(invoiceRoute, async ([FromBody] InvoiceRequested invoiceDetails, Pub
 });
 
 app.UseCors(AllowDevAccessPolicy);
+app.MapHub<InvoiceHub>("/api/live");
 app.Run();
