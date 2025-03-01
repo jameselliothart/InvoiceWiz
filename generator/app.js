@@ -78,6 +78,8 @@ async function main() {
 
   // kafka setup
   const consumer = kafka.client.consumer({ groupId: kafka.group });
+  const producer = kafka.client.producer();
+  await producer.connect();
   await consumer.connect();
   await consumer.subscribe({ topics: ["invoices"], fromBeginning: true });
 
@@ -87,6 +89,7 @@ async function main() {
       console.log(`${kafka.group}: [${topic}]: PART:${partition}: ${messageValue}`);
       const invoice = JSON.parse(messageValue);
 
+      // TODO file created inside container needs to get deleted after upload
       const filePath = `${invoice.To}.txt`;
       fs.writeFile(filePath, `amount: ${invoice.Amount}`, (err) => {
         if (err) console.error('Error writing to file', err);
@@ -94,18 +97,18 @@ async function main() {
       });
       await uploadFile(s3Client, filePath, bucket);
 
-      const listObjectsCommand = new ListObjectsV2Command({ Bucket: bucket });
-      const data = await s3Client.send(listObjectsCommand);
-      if (!data.Contents || data.Contents.length === 0) {
-        console.log('No objects found in the bucket');
-        return;
-      }
-
-      const imageKeys = data.Contents.map((object) => object.Key);
-      console.log('Found keys:', imageKeys);
-
-      const signedUrls = await Promise.all(imageKeys.map((key) => generateSignedUrl(s3Client, bucket, key)));
-      console.log('Signed URLs for the uploaded files:', signedUrls);
+      const key = path.basename(filePath);
+      const signedUrl = await generateSignedUrl(s3Client, bucket, key);
+      console.log('Signed URL for the uploaded file:', signedUrl);
+      await producer.send({
+        topic: 'invoices-generated',
+        messages: [
+          {
+            key: invoice.Id,
+            value: signedUrl,
+          }
+        ]
+      });
     },
   });
 }

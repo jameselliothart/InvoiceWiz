@@ -7,6 +7,7 @@ const invoiceSchema = new mongoose.Schema(
     _id: { type: String, required: true },
     To: { type: String, required: true },
     Amount: { type: Number, required: true },
+    FileLocation: { type: String, required: false },
   },
   { _id: false }
 );
