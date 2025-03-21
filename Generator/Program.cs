@@ -12,8 +12,10 @@ builder.Services.AddMassTransit(c =>
     c.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host("rabbitmq://broker");
-        cfg.ConfigureEndpoints(ctx);
-        cfg.UseMessageRetry(r => r.Interval(5, TimeSpan.FromSeconds(5)));
+        cfg.ReceiveEndpoint("generator-queue", e =>
+        {
+            e.ConfigureConsumers(ctx);
+        });
     });
 });
 
