@@ -1,0 +1,37 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./db:/data/db
+    networks:
+      - app-network
+
+  broker:
+    image: masstransit/rabbitmq:latest
+    hostname: broker
+    container_name: broker
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - app-network
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: APIGateway/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      - broker
+      - mongodb
+
+networks:
+  app-network:
+    driver: bridge
