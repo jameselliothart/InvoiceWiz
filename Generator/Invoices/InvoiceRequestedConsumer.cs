@@ -27,7 +27,7 @@ public class InvoiceRequestedConsumer(
         stream.Position = 0;
 
         // Upload to storage
-        var location = $"invoices/{requestedInvoice.Id}.pdf";
+        var location = $"{requestedInvoice.Id}.pdf";
         _logger.LogInformation("Uploading to {}", location);
         var pdfLink = await _storage.UploadAsync(location, stream);
 
