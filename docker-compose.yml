@@ -42,6 +42,24 @@ services:
       - broker
       - mongodb
 
+  generator:
+    build:
+      context: .
+      dockerfile: Generator/Dockerfile
+    networks:
+      - app-network
+    depends_on:
+      - broker
+      - azurite
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"  # Blob service port
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
