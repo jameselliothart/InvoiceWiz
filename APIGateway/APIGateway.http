@@ -1,6 +1,20 @@
-@APIGateway_HostAddress = http://localhost:5182
+@APIGateway_HostAddress = http://localhost:8080
 
-GET {{APIGateway_HostAddress}}/weatherforecast/
+GET {{APIGateway_HostAddress}}/invoices/
 Accept: application/json
 
 ###
+
+GET {{APIGateway_HostAddress}}/uuid
+Accept: application/json
+
+###
+
+POST {{APIGateway_HostAddress}}/invoices HTTP/1.1
+content-type: application/json
+
+{
+    "id": "08dd682b-d5f4-3f5b-f278-318b01000000",
+    "to": "me",
+    "amount": "1337.90"
+}
