@@ -15,7 +15,7 @@ builder.Services.AddMassTransit(c =>
     c.AddConsumer<InvoiceGeneratedConsumer>();
     c.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("broker");
+        cfg.Host("rabbitmq://broker");
         cfg.ConfigureEndpoints(ctx);
     });
 });
@@ -44,7 +44,11 @@ app.MapGet("/uuid", () => NewId.NextSequentialGuid()).WithOpenApi();
 
 var INVOICE_PATH = "/invoices";
 
-app.MapPost(INVOICE_PATH, async ([FromBody] InvoiceRequestedEvent invoice, IPublishEndpoint publishEndpoint) =>
+app.MapPost(INVOICE_PATH, async (
+    [FromBody] InvoiceRequestedEvent invoice,
+    IPublishEndpoint publishEndpoint,
+    ILogger<Program> logger
+    ) =>
 {
     if (invoice.Id == Guid.Empty || string.IsNullOrEmpty(invoice.Id.ToString()))
         return Results.BadRequest("Id must be a nonempty UUID");
@@ -52,6 +56,7 @@ app.MapPost(INVOICE_PATH, async ([FromBody] InvoiceRequestedEvent invoice, IPubl
         invoice.Date = DateTimeOffset.UtcNow;
 
     await publishEndpoint.Publish(invoice);
+    logger.LogInformation("Published event {}", invoice);
     return Results.Accepted();
 })
 .WithOpenApi();
