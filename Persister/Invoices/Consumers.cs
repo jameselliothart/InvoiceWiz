@@ -41,11 +41,11 @@ public class InvoiceGeneratedConsumer(IMongoDatabase _database, ILogger<InvoiceG
             .Set(i => i.Location, generatedInvoice.Location)
         ;
 
+        _logger.LogInformation("Persisting message id {}", generatedInvoice.Id);
         await _invoices.UpdateOneAsync(
             i => i.Id == generatedInvoice.Id,
             update,
             new UpdateOptions { IsUpsert = true }
         );
-        _logger.LogInformation("Persisted message id {}", generatedInvoice.Id);
     }
 }
