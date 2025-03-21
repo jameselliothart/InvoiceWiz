@@ -1,3 +1,8 @@
+using APIGateway.Invoices;
+using Contracts;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
+builder.Services.AddMassTransit(c =>
+{
+    c.AddConsumer<InvoiceGeneratedConsumer>();
+    c.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host("broker");
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
 builder.Services.AddCors(opt =>
 {
     opt.AddDefaultPolicy(policy =>
@@ -26,27 +40,33 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/uuid", () => NewId.NextSequentialGuid()).WithOpenApi();
+
 var INVOICE_PATH = "/invoices";
 
-app.MapGet("/weatherforecast", () =>
+app.MapPost(INVOICE_PATH, async ([FromBody] InvoiceRequestedEvent invoice, IPublishEndpoint publishEndpoint) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    if (invoice.Id == Guid.Empty || string.IsNullOrEmpty(invoice.Id.ToString()))
+        return Results.BadRequest("Id must be a nonempty UUID");
+    if (invoice.Date == DateTimeOffset.MinValue)
+        invoice.Date = DateTimeOffset.UtcNow;
+
+    await publishEndpoint.Publish(invoice);
+    return Results.Accepted();
 })
-.WithName("GetWeatherForecast")
 .WithOpenApi();
+
+app.MapGet(INVOICE_PATH, () =>
+{
+    return "hello";
+})
+// .WithName("GetWeatherForecast")
+.WithOpenApi();
+
+app.MapGet(INVOICE_PATH + "/{id}", (Guid id) =>
+{
+    return "hello " + id.ToString();
+});
 
 app.MapHub<InvoiceHub>($"{INVOICE_PATH}/hub");
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
