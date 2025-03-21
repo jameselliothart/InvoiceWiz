@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "Contracts\Cont
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persister", "Persister\Persister.csproj", "{C0F6043D-1E40-43C4-B15C-20AE5DD0D3D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator", "Generator\Generator.csproj", "{5D561911-872C-4553-AA5B-9331E94607EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{C0F6043D-1E40-43C4-B15C-20AE5DD0D3D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0F6043D-1E40-43C4-B15C-20AE5DD0D3D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0F6043D-1E40-43C4-B15C-20AE5DD0D3D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D561911-872C-4553-AA5B-9331E94607EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D561911-872C-4553-AA5B-9331E94607EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D561911-872C-4553-AA5B-9331E94607EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D561911-872C-4553-AA5B-9331E94607EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
