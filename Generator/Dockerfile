@@ -13,5 +13,13 @@ RUN dotnet publish Generator/Generator.csproj -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+
+# Install fonts (Debian-based image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fontconfig \
+    fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
+
+
 COPY --from=build /app/out ./
 ENTRYPOINT ["dotnet", "Generator.dll"]
