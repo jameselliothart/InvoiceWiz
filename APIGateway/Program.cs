@@ -113,8 +113,8 @@ app.MapGet(INVOICE_PATH + "/{url}/download",
 
     if (!response.IsSuccessStatusCode)
     {
-        logger.LogWarning("NoFound: {requestedUrl}", url);
-        return Results.NotFound();
+        logger.LogWarning("Failed to download {url}: {statusCode}", url, response.StatusCode);
+        return Results.StatusCode((int)response.StatusCode);
     }
 
     var stream = await response.Content.ReadAsStreamAsync();
