@@ -92,15 +92,18 @@ app.MapGet(INVOICE_PATH, async (IInvoiceRepository _repo, ILogger<Program> _logg
 
 app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
-    _logger.LogInformation("Retrieving {invoiceId}", id);
-    var invoice = await _repo.GetByIdAsync(id);
-    if (invoice == null)
+    using (_logger.BeginScope(new Dictionary<string, object>{["invoiceId"] = id}))
     {
-        _logger.LogInformation("NotFound: {invoiceId}", id);
-        return Results.NotFound();
+        _logger.LogInformation("Retrieving");
+        var invoice = await _repo.GetByIdAsync(id);
+        if (invoice == null)
+        {
+            _logger.LogInformation("NotFound");
+            return Results.NotFound();
+        }
+        _logger.LogInformation("Retrieved");
+        return Results.Ok(invoice);
     }
-    _logger.LogInformation("Retrieved {invoiceId}", id);
-    return Results.Ok(invoice);
 })
 .WithOpenApi();
 
