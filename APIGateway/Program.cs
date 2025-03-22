@@ -1,4 +1,5 @@
 using APIGateway.Invoices;
+using APIGateway.Invoices.Data;
 using Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +7,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
-using MongoDB.Driver.Linq;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +44,8 @@ builder.Services.AddCors(opt =>
 // Register MongoDB
 builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://mongodb:27017"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("InvoiceDb"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Invoice>("invoices"));
+builder.Services.AddSingleton<IInvoiceRepository, MongoInvoiceRepository>();
 
 var app = builder.Build();
 
@@ -79,21 +81,19 @@ app.MapPost(INVOICE_PATH, async (
 })
 .WithOpenApi();
 
-app.MapGet(INVOICE_PATH, async (IMongoDatabase _database, ILogger<Program> _logger) =>
+app.MapGet(INVOICE_PATH, async (IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
     _logger.LogInformation("Retrieving all invoices");
-    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
-    var invoices = await invoiceCollection.AsQueryable().ToListAsync();
+    var invoices = await _repo.GetAllAsync();
     _logger.LogInformation("Retrieved {invoiceCount} invoices", invoices.Count);
     return invoices;
 })
 .WithOpenApi();
 
-app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IMongoDatabase _database, ILogger<Program> _logger) =>
+app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
     _logger.LogInformation("Retrieving {invoiceId}", id);
-    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
-    var invoice = await invoiceCollection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
+    var invoice = await _repo.GetByIdAsync(id);
     if (invoice == null)
     {
         _logger.LogInformation("NotFound: {invoiceId}", id);
@@ -105,11 +105,10 @@ app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IMongoDatabase _database, ILo
 .WithOpenApi();
 
 app.MapGet(INVOICE_PATH + "/{id}/download",
-    async (Guid id, IHttpClientFactory httpClientFactory, IMongoDatabase _database, ILogger<Program> _logger) =>
+    async (Guid id, IHttpClientFactory httpClientFactory, IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
     _logger.LogInformation("Retrieving {invoiceId}", id);
-    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
-    var invoice = await invoiceCollection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
+    var invoice = await _repo.GetByIdAsync(id);
     if (invoice == null)
     {
         _logger.LogInformation("NotFound: {invoiceId}", id);
