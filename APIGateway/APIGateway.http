@@ -5,6 +5,11 @@ Accept: application/json
 
 ###
 
+GET {{APIGateway_HostAddress}}/invoices/08dd6943-c321-7595-8638-52a101000000
+Accept: application/json
+
+###
+
 GET {{APIGateway_HostAddress}}/uuid
 Accept: application/json
 
