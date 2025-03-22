@@ -16,5 +16,7 @@ content-type: application/json
 {
     "id": "08dd682b-d5f4-3f5b-f278-318b01000000",
     "to": "me",
-    "amount": "1337.90"
+    "amount": "1337.90",
+    "details": "do great things",
+    "invoiceDate": "3/20/2025"
 }

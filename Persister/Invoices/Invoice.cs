@@ -1,3 +1,3 @@
 namespace Persister.Invoices;
 
-public record Invoice(Guid Id, string To, decimal Amount, Uri Location, DateTimeOffset CreatedDate) {}
+public record Invoice(Guid Id, string To, decimal Amount, Uri Location, DateTimeOffset CreatedDate, string Details, DateOnly InvoiceDate) {}

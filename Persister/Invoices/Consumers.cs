@@ -17,6 +17,8 @@ public class InvoiceRequestedConsumer(IMongoDatabase _database, ILogger<InvoiceR
             .Set(i => i.To, requestedInvoice.To)
             .Set(i => i.Amount, requestedInvoice.Amount)
             .Set(i => i.CreatedDate, requestedInvoice.Date)
+            .Set(i => i.InvoiceDate, requestedInvoice.InvoiceDate)
+            .Set(i => i.Details, requestedInvoice.Details)
         ;
 
         await _invoices.UpdateOneAsync(

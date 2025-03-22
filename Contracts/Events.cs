@@ -1,6 +1,6 @@
 ﻿namespace Contracts;
 
-public record InvoiceRequestedEvent(Guid Id, string To, decimal Amount)
+public record InvoiceRequestedEvent(Guid Id, string To, decimal Amount, string Details, DateOnly InvoiceDate)
 {
     public DateTimeOffset Date { get; set; }
 }
