@@ -44,7 +44,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/uuid", () => NewId.NextSequentialGuid()).WithOpenApi();
+app.MapGet("/api/uuid", () => NewId.NextSequentialGuid()).WithOpenApi();
 
 var INVOICE_PATH = "/api/invoices";
 
