@@ -22,7 +22,7 @@ builder.Services.AddMassTransit(c =>
     c.UsingRabbitMq((ctx, cfg) =>
     {
         cfg.Host("rabbitmq://broker");
-        cfg.ReceiveEndpoint("gateway-queue", e =>
+        cfg.ReceiveEndpoint("apigateway-queue", e =>
         {
             e.ConfigureConsumers(ctx);
         });
