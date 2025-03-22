@@ -4,10 +4,11 @@ using PdfSharpCore.Pdf;
 
 namespace Generator.FileGeneration;
 
-public class PdfGenerator : IFileGenerator
+public class PdfGenerator(ILogger<PdfGenerator> _logger) : IFileGenerator
 {
     public MemoryStream Generate(InvoiceRequestedEvent requestedInvoice)
     {
+        _logger.LogInformation("Generating {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
         using var document = new PdfDocument();
         var page = document.AddPage();
         var gfx = XGraphics.FromPdfPage(page);
@@ -90,6 +91,7 @@ public class PdfGenerator : IFileGenerator
         var stream = new MemoryStream();
         document.Save(stream, false);
         stream.Position = 0;
+        _logger.LogInformation("Generated {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
         return stream;
     }
 }
