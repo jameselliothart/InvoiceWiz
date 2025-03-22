@@ -57,6 +57,7 @@ services:
     container_name: azurite
     ports:
       - "10000:10000"  # Blob service port
+    command: "azurite-blob --blobHost 0.0.0.0 --loose"  # Run blob service only, relaxed parsing
     networks:
       - app-network
 
