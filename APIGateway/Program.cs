@@ -2,6 +2,11 @@ using APIGateway.Invoices;
 using Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +37,9 @@ builder.Services.AddCors(opt =>
             .AllowCredentials()
     );
 });
+// Register MongoDB
+builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://mongodb:27017"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("InvoiceDb"));
 
 var app = builder.Build();
 
@@ -65,11 +73,28 @@ app.MapPost(INVOICE_PATH, async (
 })
 .WithOpenApi();
 
-app.MapGet(INVOICE_PATH, () =>
+app.MapGet(INVOICE_PATH, async (IMongoDatabase _database, ILogger<Program> _logger) =>
 {
-    return "hello";
+    _logger.LogInformation("Retrieving all invoices");
+    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
+    var invoices = await invoiceCollection.AsQueryable().ToListAsync();
+    _logger.LogInformation("Found {} invoices", invoices.Count);
+    return invoices;
 })
-// .WithName("GetWeatherForecast")
+.WithOpenApi();
+
+app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IMongoDatabase _database, ILogger<Program> _logger) =>
+{
+    _logger.LogInformation("Retrieving invoice with id {}", id);
+    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
+    var invoice = await invoiceCollection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
+    if (invoice == null)
+    {
+        _logger.LogInformation("Cannot find invoice with id {}", id);
+        return Results.NotFound();
+    }
+    return Results.Ok(invoice);
+})
 .WithOpenApi();
 
 app.MapGet(INVOICE_PATH + "/{url}/download",
@@ -90,6 +115,8 @@ app.MapGet(INVOICE_PATH + "/{url}/download",
     logger.LogInformation("Returning file {}", fileName);
     return Results.File(stream, "application/pdf", fileName);
 });
+
+BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
 app.MapHub<InvoiceHub>($"{INVOICE_PATH}/hub");
 app.Run();
