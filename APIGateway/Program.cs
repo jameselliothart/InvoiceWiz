@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 builder.Services.AddSignalR();
 builder.Services.AddMassTransit(c =>
 {
@@ -45,7 +46,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/uuid", () => NewId.NextSequentialGuid()).WithOpenApi();
 
-var INVOICE_PATH = "/invoices";
+var INVOICE_PATH = "/api/invoices";
 
 app.MapPost(INVOICE_PATH, async (
     [FromBody] InvoiceRequestedEvent invoice,
@@ -71,9 +72,23 @@ app.MapGet(INVOICE_PATH, () =>
 // .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet(INVOICE_PATH + "/{id}", (Guid id) =>
+app.MapGet(INVOICE_PATH + "/{url}/download",
+    async (Uri url, IHttpClientFactory httpClientFactory, ILogger<Program> logger) =>
 {
-    return "hello " + id.ToString();
+    var httpClient = httpClientFactory.CreateClient();
+    logger.LogInformation("Downloading {}", url);
+    var response = await httpClient.GetAsync(url);
+
+    if (!response.IsSuccessStatusCode)
+    {
+        logger.LogWarning("Not found {}", url);
+        return Results.NotFound();
+    }
+
+    var stream = await response.Content.ReadAsStreamAsync();
+    var fileName = Path.GetFileName(url.ToString());
+    logger.LogInformation("Returning file {}", fileName);
+    return Results.File(stream, "application/pdf", fileName);
 });
 
 app.MapHub<InvoiceHub>($"{INVOICE_PATH}/hub");

@@ -1,6 +1,6 @@
 @APIGateway_HostAddress = http://localhost:8080
 
-GET {{APIGateway_HostAddress}}/invoices/
+GET {{APIGateway_HostAddress}}/api/invoices/
 Accept: application/json
 
 ###
@@ -10,7 +10,7 @@ Accept: application/json
 
 ###
 
-POST {{APIGateway_HostAddress}}/invoices HTTP/1.1
+POST {{APIGateway_HostAddress}}/api/invoices HTTP/1.1
 content-type: application/json
 
 {
