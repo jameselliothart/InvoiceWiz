@@ -7,8 +7,12 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -43,6 +47,8 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDat
 
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -68,7 +74,7 @@ app.MapPost(INVOICE_PATH, async (
         invoice.Date = DateTimeOffset.UtcNow;
 
     await publishEndpoint.Publish(invoice);
-    logger.LogInformation("Published event {}", invoice);
+    logger.LogInformation("Published {InvoiceRequestedEvent} {invoiceId}", invoice, invoice.Id);
     return Results.Accepted();
 })
 .WithOpenApi();
@@ -78,21 +84,22 @@ app.MapGet(INVOICE_PATH, async (IMongoDatabase _database, ILogger<Program> _logg
     _logger.LogInformation("Retrieving all invoices");
     var invoiceCollection = _database.GetCollection<Invoice>("invoices");
     var invoices = await invoiceCollection.AsQueryable().ToListAsync();
-    _logger.LogInformation("Found {} invoices", invoices.Count);
+    _logger.LogInformation("Retrieved {invoiceCount} invoices", invoices.Count);
     return invoices;
 })
 .WithOpenApi();
 
 app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IMongoDatabase _database, ILogger<Program> _logger) =>
 {
-    _logger.LogInformation("Retrieving invoice with id {}", id);
+    _logger.LogInformation("Retrieving {invoiceId}", id);
     var invoiceCollection = _database.GetCollection<Invoice>("invoices");
     var invoice = await invoiceCollection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
     if (invoice == null)
     {
-        _logger.LogInformation("Cannot find invoice with id {}", id);
+        _logger.LogInformation("NotFound: {invoiceId}", id);
         return Results.NotFound();
     }
+    _logger.LogInformation("Retrieved {invoiceId}", id);
     return Results.Ok(invoice);
 })
 .WithOpenApi();
@@ -101,18 +108,19 @@ app.MapGet(INVOICE_PATH + "/{url}/download",
     async (Uri url, IHttpClientFactory httpClientFactory, ILogger<Program> logger) =>
 {
     var httpClient = httpClientFactory.CreateClient();
-    logger.LogInformation("Downloading {}", url);
+    logger.LogInformation("Downloading {requestedUrl}", url);
     var response = await httpClient.GetAsync(url);
 
     if (!response.IsSuccessStatusCode)
     {
-        logger.LogWarning("Not found {}", url);
+        logger.LogWarning("NoFound: {requestedUrl}", url);
         return Results.NotFound();
     }
 
     var stream = await response.Content.ReadAsStreamAsync();
     var fileName = Path.GetFileName(url.ToString());
-    logger.LogInformation("Returning file {}", fileName);
+    var invoiceId = Path.GetFileNameWithoutExtension(fileName);
+    logger.LogInformation("Downloaded {fileName} {invoiceId}", fileName, invoiceId);
     return Results.File(stream, "application/pdf", fileName);
 });
 
