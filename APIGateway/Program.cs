@@ -118,5 +118,5 @@ app.MapGet(INVOICE_PATH + "/{url}/download",
 
 BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
-app.MapHub<InvoiceHub>($"{INVOICE_PATH}/hub");
+app.MapHub<InvoiceHub>("/invoiceHub");
 app.Run();
