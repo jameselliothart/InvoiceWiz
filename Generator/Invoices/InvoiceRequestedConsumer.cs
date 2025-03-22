@@ -1,14 +1,14 @@
 using Contracts;
+using Generator.FileGeneration;
 using Generator.Storage;
 using MassTransit;
-using PdfSharpCore.Drawing;
-using PdfSharpCore.Pdf;
 
 namespace Generator.Invoices;
 
 public class InvoiceRequestedConsumer(
     IPublishEndpoint _publishEndpoint,
     IBlobStorageService _storage,
+    IFileGenerator _generator,
     ILogger<InvoiceRequestedConsumer> _logger
     ) : IConsumer<InvoiceRequestedEvent>
 {
@@ -17,14 +17,7 @@ public class InvoiceRequestedConsumer(
         var requestedInvoice = context.Message;
         _logger.LogInformation("Generating invoice for {}", requestedInvoice);
 
-        using var pdf = new PdfDocument();
-        var page = pdf.AddPage();
-        var gfx = XGraphics.FromPdfPage(page);
-        gfx.DrawString(requestedInvoice.To, new XFont("DejaVu Sans", 12), XBrushes.Black, new XPoint(10, 10));
-
-        using var stream = new MemoryStream();
-        pdf.Save(stream, false);
-        stream.Position = 0;
+        var stream = _generator.Generate(requestedInvoice);
 
         // Upload to storage
         var location = $"{requestedInvoice.Id}.pdf";

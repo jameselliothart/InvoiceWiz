@@ -1,3 +1,4 @@
+using Generator.FileGeneration;
 using Generator.Invoices;
 using Generator.Storage;
 using MassTransit;
@@ -6,6 +7,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<AzureBlobStorageOptions>(builder.Configuration.GetSection("AzureBlobStorage"));
 builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
+builder.Services.AddSingleton<IFileGenerator, PdfGenerator>();
 builder.Services.AddMassTransit(c =>
 {
     c.AddConsumer<InvoiceRequestedConsumer>();
