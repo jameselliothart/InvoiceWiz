@@ -104,25 +104,53 @@ app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IMongoDatabase _database, ILo
 })
 .WithOpenApi();
 
-app.MapGet(INVOICE_PATH + "/{url}/download",
-    async (Uri url, IHttpClientFactory httpClientFactory, ILogger<Program> logger) =>
+app.MapGet(INVOICE_PATH + "/{id}/download",
+    async (Guid id, IHttpClientFactory httpClientFactory, IMongoDatabase _database, ILogger<Program> _logger) =>
 {
+    _logger.LogInformation("Retrieving {invoiceId}", id);
+    var invoiceCollection = _database.GetCollection<Invoice>("invoices");
+    var invoice = await invoiceCollection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
+    if (invoice == null)
+    {
+        _logger.LogInformation("NotFound: {invoiceId}", id);
+        return Results.NotFound();
+    }
+    _logger.LogInformation("Retrieved {invoiceId}", id);
+
+    var url = invoice.Location;
     var httpClient = httpClientFactory.CreateClient();
-    logger.LogInformation("Downloading {requestedUrl}", url);
-    var response = await httpClient.GetAsync(url);
+    _logger.LogInformation("Downloading {url} {invoiceId}", url, id);
+    // Add SharedKey auth (for Azurite demo only)
+    var request = new HttpRequestMessage(HttpMethod.Get, url);
+    request.Headers.Add("x-ms-version", "2020-04-08"); // Azurite-compatible version
+    request.Headers.Add("x-ms-date", DateTime.UtcNow.ToString("R")); // RFC 1123
+    request.Headers.Add("Authorization", GenerateSharedKeyAuth(url, "GET"));
+
+    var response = await httpClient.SendAsync(request);
 
     if (!response.IsSuccessStatusCode)
     {
-        logger.LogWarning("Failed to download {url}: {statusCode}", url, response.StatusCode);
+        _logger.LogWarning("Failed to download {url}: {statusCode}", url, response.StatusCode);
         return Results.StatusCode((int)response.StatusCode);
     }
 
     var stream = await response.Content.ReadAsStreamAsync();
     var fileName = Path.GetFileName(url.ToString());
-    var invoiceId = Path.GetFileNameWithoutExtension(fileName);
-    logger.LogInformation("Downloaded {fileName} {invoiceId}", fileName, invoiceId);
+    _logger.LogInformation("Downloaded {url} {invoiceId}", url, id);
     return Results.File(stream, "application/pdf", fileName);
-});
+})
+.WithOpenApi();
+
+// Simple SharedKey auth (for demo, not production-ready)
+static string GenerateSharedKeyAuth(Uri uri, string method)
+{
+    var accountName = "devstoreaccount1";
+    var accountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+    var stringToSign = $"{method}\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{DateTime.UtcNow:R}\nx-ms-version:2020-04-08\n/{accountName}{uri.AbsolutePath}";
+    using var hmac = new System.Security.Cryptography.HMACSHA256(Convert.FromBase64String(accountKey));
+    var signature = Convert.ToBase64String(hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(stringToSign)));
+    return $"SharedKey {accountName}:{signature}";
+}
 
 BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 
