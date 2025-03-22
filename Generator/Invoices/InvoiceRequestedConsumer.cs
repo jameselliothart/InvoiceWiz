@@ -17,7 +17,7 @@ public class InvoiceRequestedConsumer(
         var requestedInvoice = context.Message;
         _logger.LogInformation("Generating invoice for {}", requestedInvoice);
 
-        var stream = _generator.Generate(requestedInvoice);
+        using var stream = _generator.Generate(requestedInvoice);
 
         // Upload to storage
         var location = $"{requestedInvoice.Id}.pdf";

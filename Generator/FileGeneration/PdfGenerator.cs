@@ -13,7 +13,7 @@ public class PdfGenerator : IFileGenerator
         var gfx = XGraphics.FromPdfPage(page);
         gfx.DrawString(requestedInvoice.To, new XFont("DejaVu Sans", 12), XBrushes.Black, new XPoint(10, 10));
 
-        using var stream = new MemoryStream();
+        var stream = new MemoryStream();
         pdf.Save(stream, false);
         stream.Position = 0;
         return stream;
