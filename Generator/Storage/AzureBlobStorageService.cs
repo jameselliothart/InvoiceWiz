@@ -23,7 +23,7 @@ public class AzureBlobStorageService : IBlobStorageService
             _logger.LogInformation("Created blob container {containerName}}", config.ContainerName);
         }
         _logger.LogInformation("{containerName} {containerServiceUri} {containerAccountName} {IsPublicAccess}",
-            _containerClient.Name, _containerClient.Uri, _containerClient.AccountName, _containerClient.GetAccessPolicy().Value
+            _containerClient.Name, _containerClient.Uri, _containerClient.AccountName, _containerClient.GetAccessPolicy().Value.BlobPublicAccess
         );
         _logger.LogInformation("{containerMetadata}", _containerClient.GetProperties().Value.Metadata);
     }
