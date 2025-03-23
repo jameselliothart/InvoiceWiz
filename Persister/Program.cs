@@ -1,3 +1,4 @@
+using Contracts;
 using MassTransit;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -11,6 +12,7 @@ builder.Services.AddSerilog(config => config.ReadFrom.Configuration(builder.Conf
 // Register MongoDB
 builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://mongodb:27017"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("InvoiceDb"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Invoice>("invoices"));
 
 builder.Services.AddMassTransit(c =>
 {

@@ -4,10 +4,8 @@ using MongoDB.Driver;
 
 namespace Persister.Invoices;
 
-public class InvoiceRequestedConsumer(IMongoDatabase _database, ILogger<InvoiceRequestedConsumer> _logger) : IConsumer<InvoiceRequestedEvent>
+public class InvoiceRequestedConsumer(IMongoCollection<Invoice> _invoices, ILogger<InvoiceRequestedConsumer> _logger) : IConsumer<InvoiceRequestedEvent>
 {
-    private readonly IMongoCollection<Invoice> _invoices = _database.GetCollection<Invoice>("invoices");
-
     public async Task Consume(ConsumeContext<InvoiceRequestedEvent> context)
     {
         var requestedInvoice = context.Message;
@@ -38,10 +36,8 @@ public class InvoiceRequestedConsumer(IMongoDatabase _database, ILogger<InvoiceR
     }
 }
 
-public class InvoiceGeneratedConsumer(IMongoDatabase _database, ILogger<InvoiceGeneratedConsumer> _logger) : IConsumer<InvoiceGeneratedEvent>
+public class InvoiceGeneratedConsumer(IMongoCollection<Invoice> _invoices, ILogger<InvoiceGeneratedConsumer> _logger) : IConsumer<InvoiceGeneratedEvent>
 {
-    private readonly IMongoCollection<Invoice> _invoices = _database.GetCollection<Invoice>("invoices");
-
     public async Task Consume(ConsumeContext<InvoiceGeneratedEvent> context)
     {
         var generatedInvoice = context.Message;
