@@ -77,9 +77,18 @@ app.MapPost(INVOICE_PATH, async (
     if (invoice.Date == DateTimeOffset.MinValue)
         invoice.Date = DateTimeOffset.UtcNow;
 
-    await publishEndpoint.Publish(invoice);
-    logger.LogInformation("Published {InvoiceRequestedEvent} {invoiceId}", invoice, invoice.Id);
-    return Results.Accepted();
+    using (logger.BeginScope(new Dictionary<string, object>
+        {
+            ["invoiceId"] = invoice.Id,
+            ["InvoiceRequestedEvent"] = invoice,
+        }
+    ))
+    {
+        logger.LogInformation("Publishing");
+        await publishEndpoint.Publish(invoice);
+        logger.LogInformation("Published");
+        return Results.Accepted();
+    }
 })
 .WithOpenApi();
 
