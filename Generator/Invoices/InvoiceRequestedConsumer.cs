@@ -16,20 +16,31 @@ public class InvoiceRequestedConsumer(
     {
         var requestedInvoice = context.Message;
 
-        _logger.LogInformation("Generating {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
-        using var stream = _generator.Generate(requestedInvoice);
-        _logger.LogInformation("Generated {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
+        using (_logger.BeginScope(new Dictionary<string, object>
+            {
+                ["invoiceId"] = requestedInvoice.Id,
+                ["requestedInvoice"] = requestedInvoice,
+            }
+        ))
+        {
+            _logger.LogInformation("Generating");
+            using var stream = _generator.Generate(requestedInvoice);
+            _logger.LogInformation("Generated");
 
-        // Upload to storage
-        var blobName = $"{requestedInvoice.Id}.pdf";
-        _logger.LogInformation("Uploading {blobName} {requestedInvoice} {invoiceId}", blobName, requestedInvoice, requestedInvoice.Id);
-        var pdfLink = await _storage.UploadAsync(blobName, stream);
-        _logger.LogInformation("Uploaded {blobName} {requestedInvoice} {invoiceId}", blobName, requestedInvoice, requestedInvoice.Id);
+            // Upload to storage
+            var blobName = $"{requestedInvoice.Id}.pdf";
+            _logger.LogInformation("Uploading {blobName}", blobName);
+            var pdfLink = await _storage.UploadAsync(blobName, stream);
+            _logger.LogInformation("Uploaded {blobName}", blobName);
 
-        // Publish event
-        var generatedInvoice = new InvoiceGeneratedEvent(requestedInvoice.Id, pdfLink);
-        _logger.LogInformation("Publishing {generatedInvoice} {invoiceId}", generatedInvoice, generatedInvoice.Id);
-        await _publishEndpoint.Publish(generatedInvoice);
-        _logger.LogInformation("Published {generatedInvoice} {invoiceId}", generatedInvoice, generatedInvoice.Id);
+            // Publish event
+            var generatedInvoice = new InvoiceGeneratedEvent(requestedInvoice.Id, pdfLink);
+            using (_logger.BeginScope(new Dictionary<string, object>{["generatedInvoice"] = generatedInvoice}))
+            {
+                _logger.LogInformation("Publishing");
+                await _publishEndpoint.Publish(generatedInvoice);
+                _logger.LogInformation("Published");
+            }
+        }
     }
 }

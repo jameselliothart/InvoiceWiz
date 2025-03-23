@@ -11,22 +11,30 @@ public class InvoiceRequestedConsumer(IMongoDatabase _database, ILogger<InvoiceR
     public async Task Consume(ConsumeContext<InvoiceRequestedEvent> context)
     {
         var requestedInvoice = context.Message;
-        _logger.LogInformation("Persisting {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
-        var update = Builders<Invoice>.Update
-            .SetOnInsert(i => i.Id, requestedInvoice.Id)
-            .Set(i => i.To, requestedInvoice.To)
-            .Set(i => i.Amount, requestedInvoice.Amount)
-            .Set(i => i.CreatedDate, requestedInvoice.Date)
-            .Set(i => i.InvoiceDate, requestedInvoice.InvoiceDate)
-            .Set(i => i.Details, requestedInvoice.Details)
-        ;
+        using (_logger.BeginScope(new Dictionary<string, object>
+            {
+                ["invoiceId"] = requestedInvoice.Id,
+                ["requestedInvoice"] = requestedInvoice,
+            }
+        ))
+        {
+            _logger.LogInformation("Persisting");
+            var update = Builders<Invoice>.Update
+                .SetOnInsert(i => i.Id, requestedInvoice.Id)
+                .Set(i => i.To, requestedInvoice.To)
+                .Set(i => i.Amount, requestedInvoice.Amount)
+                .Set(i => i.CreatedDate, requestedInvoice.Date)
+                .Set(i => i.InvoiceDate, requestedInvoice.InvoiceDate)
+                .Set(i => i.Details, requestedInvoice.Details)
+            ;
 
-        await _invoices.UpdateOneAsync(
-            i => i.Id == requestedInvoice.Id,
-            update,
-            new UpdateOptions { IsUpsert = true }
-        );
-        _logger.LogInformation("Persisted {requestedInvoice} {invoiceId}", requestedInvoice, requestedInvoice.Id);
+            await _invoices.UpdateOneAsync(
+                i => i.Id == requestedInvoice.Id,
+                update,
+                new UpdateOptions { IsUpsert = true }
+            );
+            _logger.LogInformation("Persisted");
+        }
     }
 }
 
@@ -37,17 +45,25 @@ public class InvoiceGeneratedConsumer(IMongoDatabase _database, ILogger<InvoiceG
     public async Task Consume(ConsumeContext<InvoiceGeneratedEvent> context)
     {
         var generatedInvoice = context.Message;
-        _logger.LogInformation("Persisting {generatedInvoice} {invoiceId}", generatedInvoice, generatedInvoice.Id);
-        var update = Builders<Invoice>.Update
-            .SetOnInsert(i => i.Id, generatedInvoice.Id)
-            .Set(i => i.Location, generatedInvoice.Location)
-        ;
+        using (_logger.BeginScope(new Dictionary<string, object>
+            {
+                ["invoiceId"] = generatedInvoice.Id,
+                ["requestedInvoice"] = generatedInvoice,
+            }
+        ))
+        {
+            _logger.LogInformation("Persisting");
+            var update = Builders<Invoice>.Update
+                .SetOnInsert(i => i.Id, generatedInvoice.Id)
+                .Set(i => i.Location, generatedInvoice.Location)
+            ;
 
-        await _invoices.UpdateOneAsync(
-            i => i.Id == generatedInvoice.Id,
-            update,
-            new UpdateOptions { IsUpsert = true }
-        );
-        _logger.LogInformation("Persisted {generatedInvoice} {invoiceId}", generatedInvoice, generatedInvoice.Id);
+            await _invoices.UpdateOneAsync(
+                i => i.Id == generatedInvoice.Id,
+                update,
+                new UpdateOptions { IsUpsert = true }
+            );
+            _logger.LogInformation("Persisted");
+        }
     }
 }

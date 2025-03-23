@@ -12,15 +12,18 @@ public class InvoiceGeneratedConsumer(
     public async Task Consume(ConsumeContext<InvoiceGeneratedEvent> context)
     {
         var generatedInvoice = context.Message;
-        _logger.LogInformation(
-            "Notifying hub clients on {method} of {generatedInvoice} {invoiceId}",
-            RTMethod, generatedInvoice, generatedInvoice.Id
-        );
-        await _hubContext.Clients.All.SendAsync(RTMethod,
-            generatedInvoice.Id, generatedInvoice.Location);
-        _logger.LogInformation(
-            "Notified hub clients on {method} of {generatedInvoice} {invoiceId}",
-            RTMethod, generatedInvoice, generatedInvoice.Id
-        );
+        using (_logger.BeginScope(new Dictionary<string, object>
+            {
+                ["method"] = RTMethod,
+                ["invoiceId"] = generatedInvoice.Id,
+                ["generatedInvoice"] = generatedInvoice,
+            }
+        ))
+        {
+            _logger.LogInformation("Notifying hub clients");
+            await _hubContext.Clients.All.SendAsync(RTMethod,
+                generatedInvoice.Id, generatedInvoice.Location);
+            _logger.LogInformation("Notified hub clients");
+        }
     }
 }

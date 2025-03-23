@@ -16,10 +16,13 @@ public class MongoInvoiceRepository(IMongoCollection<Invoice> _collection, ILogg
 
     public async Task<Invoice?> GetByIdAsync(Guid id)
     {
-        _logger.LogInformation("Retrieving {invoiceId}", id);
-        var invoice = await _collection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
-        if (invoice == null) _logger.LogInformation("NotFound: {invoiceId}", id);
-        else _logger.LogInformation("Retrieved {invoiceId}", id);
-        return invoice;
+        using (_logger.BeginScope(new Dictionary<string, object>{["invoiceId"] = id}))
+        {
+            _logger.LogInformation("Retrieving");
+            var invoice = await _collection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
+            if (invoice == null) _logger.LogInformation("NotFound");
+            else _logger.LogInformation("Retrieved");
+            return invoice;
+        }
     }
 }
