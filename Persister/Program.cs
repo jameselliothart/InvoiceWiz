@@ -10,17 +10,22 @@ using Serilog;
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSerilog(config => config.ReadFrom.Configuration(builder.Configuration));
 // Register MongoDB
-builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://mongodb:27017"));
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase("InvoiceDb"));
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoDatabase>().GetCollection<Invoice>("invoices"));
+builder.Services.AddSingleton(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var connStr = config.GetConnectionString("MongoDb");
+    var client = new MongoClient(connStr);
+    return client.GetDatabase("InvoiceDb").GetCollection<Invoice>("invoices");
+});
 
 builder.Services.AddMassTransit(c =>
 {
+    var config = builder.Configuration;
     c.AddConsumer<InvoiceRequestedConsumer>();
     c.AddConsumer<InvoiceGeneratedConsumer>();
     c.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("rabbitmq://broker");
+        cfg.Host(config["RabbitMQ:Host"]);
         cfg.ReceiveEndpoint("persister-queue", e =>
         {
             e.ConfigureConsumers(ctx);

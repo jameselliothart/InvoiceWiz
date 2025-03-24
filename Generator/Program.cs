@@ -12,10 +12,11 @@ builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
 builder.Services.AddSingleton<IFileGenerator, PdfGenerator>();
 builder.Services.AddMassTransit(c =>
 {
+    var config = builder.Configuration;
     c.AddConsumer<InvoiceRequestedConsumer>();
     c.UsingRabbitMq((ctx, cfg) =>
     {
-        cfg.Host("rabbitmq://broker");
+        cfg.Host(config["RabbitMQ:Host"]);
         cfg.ReceiveEndpoint("generator-queue", e =>
         {
             e.ConfigureConsumers(ctx);
