@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Generator.FileGeneration;
 using Generator.Invoices;
 using Generator.Storage;
@@ -7,7 +8,14 @@ using Serilog;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddSerilog(config => config.ReadFrom.Configuration(builder.Configuration));
-builder.Services.Configure<AzureBlobStorageOptions>(builder.Configuration.GetSection("AzureBlobStorage"));
+builder.Services.AddSingleton(sp =>
+{
+    var config = builder.Configuration;
+    var blobClient = new BlobServiceClient(config["AzureBlobStorage:ConnectionString"]);
+    var containerClient = blobClient.GetBlobContainerClient(config["AzureBlobStorage:ContainerName"]);
+    containerClient.CreateIfNotExists();
+    return containerClient;
+});
 builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
 builder.Services.AddSingleton<IFileGenerator, PdfGenerator>();
 builder.Services.AddMassTransit(c =>
