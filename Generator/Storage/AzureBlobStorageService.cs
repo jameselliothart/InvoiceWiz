@@ -18,9 +18,9 @@ public class AzureBlobStorageService : IBlobStorageService
         _containerClient = blobClient.GetBlobContainerClient(config.ContainerName);
         if (!_containerClient.Exists())
         {
-            _logger.LogInformation("Creating blob container {containerName}}", config.ContainerName);
+            _logger.LogInformation("Creating blob container {containerName}", config.ContainerName);
             _containerClient.CreateIfNotExists();
-            _logger.LogInformation("Created blob container {containerName}}", config.ContainerName);
+            _logger.LogInformation("Created blob container {containerName}", config.ContainerName);
         }
         _logger.LogInformation("{containerName} {containerServiceUri} {containerAccountName} {IsPublicAccess}",
             _containerClient.Name, _containerClient.Uri, _containerClient.AccountName, _containerClient.GetAccessPolicy().Value.BlobPublicAccess
