@@ -1,0 +1,15 @@
+syntax = "proto3";
+option csharp_namespace = "Search.Grpc";
+
+service InvoiceSearchService {
+  rpc GetInvoiceUrl (GetInvoiceUrlRequest) returns (GetInvoiceUrlReply);
+}
+
+message GetInvoiceUrlRequest {
+  string Id = 1;
+}
+
+message GetInvoiceUrlReply {
+  string Id = 1;
+  string Url = 2;
+}
