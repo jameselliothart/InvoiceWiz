@@ -56,7 +56,12 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddSingleton<IInvoiceRepository, GrpcInvoiceRepository>();
 builder.Services.AddSingleton<IInvoiceFileRepository, AzureInvoiceFileRepository>();
 builder.Services.AddSingleton(sp =>
-    new InvoiceSearchService.InvoiceSearchServiceClient(GrpcChannel.ForAddress("http://search:8080")));
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var connStr = config.GetConnectionString("SearchService") ??
+        throw new ArgumentException("Configure SearchService connection string");
+    return new InvoiceSearchService.InvoiceSearchServiceClient(GrpcChannel.ForAddress(connStr));
+});
 
 var app = builder.Build();
 
