@@ -5,8 +5,12 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Search.DataAccess;
 using Search.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, config) =>
+    config.ReadFrom.Configuration(context.Configuration));
 
 // Add services to the container.
 builder.Services.AddGrpc();
