@@ -42,6 +42,15 @@ services:
       - broker
       - mongodb
 
+  search:
+    build:
+      context: .
+      dockerfile: Search/Dockerfile
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
+
   generator:
     build:
       context: .
