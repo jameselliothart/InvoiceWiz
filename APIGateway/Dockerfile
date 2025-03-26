@@ -8,6 +8,9 @@ COPY APIGateway/*.csproj ./APIGateway/
 # Restores Contracts too since it's referenced
 RUN dotnet restore APIGateway/APIGateway.csproj
 
+# Copy protobuf definitions
+COPY protos ./protos/
+
 # Copy all source and publish
 COPY Contracts/ ./Contracts/
 COPY APIGateway/ ./APIGateway/

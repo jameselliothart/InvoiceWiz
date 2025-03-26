@@ -9,6 +9,8 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using Serilog;
+using Search.Grpc;
+using Grpc.Net.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,8 +53,10 @@ builder.Services.AddSingleton(sp =>
     var client = new MongoClient(connStr);
     return client.GetDatabase("InvoiceDb").GetCollection<Invoice>("invoices");
 });
-builder.Services.AddSingleton<IInvoiceRepository, MongoInvoiceRepository>();
+builder.Services.AddSingleton<IInvoiceRepository, GrpcInvoiceRepository>();
 builder.Services.AddSingleton<IInvoiceFileRepository, AzureInvoiceFileRepository>();
+builder.Services.AddSingleton(sp =>
+    new InvoiceSearchService.InvoiceSearchServiceClient(GrpcChannel.ForAddress("http://search:8080")));
 
 var app = builder.Build();
 
@@ -83,10 +87,10 @@ app.MapPost(INVOICE_PATH, async (
         invoice.Date = DateTimeOffset.UtcNow;
 
     using (logger.BeginScope(new Dictionary<string, object>
-        {
-            ["invoiceId"] = invoice.Id,
-            ["InvoiceRequestedEvent"] = invoice,
-        }
+    {
+        ["invoiceId"] = invoice.Id,
+        ["InvoiceRequestedEvent"] = invoice,
+    }
     ))
     {
         logger.LogInformation("Publishing");
@@ -108,7 +112,7 @@ app.MapGet(INVOICE_PATH, async (IInvoiceRepository _repo, ILogger<Program> _logg
 
 app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
-    using (_logger.BeginScope(new Dictionary<string, object>{["invoiceId"] = id}))
+    using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = id }))
     {
         _logger.LogInformation("Retrieving");
         var invoice = await _repo.GetByIdAsync(id);
@@ -126,19 +130,19 @@ app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IInvoiceRepository _repo, ILo
 app.MapGet(INVOICE_PATH + "/{id}/download",
     async (Guid id, IInvoiceFileRepository _fileRepo, IInvoiceRepository _repo, ILogger<Program> _logger) =>
 {
-    using (_logger.BeginScope(new Dictionary<string, object>{["invoiceId"] = id}))
+    using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = id }))
     {
         _logger.LogInformation("Retrieving");
-        var invoice = await _repo.GetByIdAsync(id);
-        if (invoice == null)
+        var url = await _repo.GetUrlByIdAsync(id);
+        if (url == null)
         {
-            _logger.LogInformation("NotFound");
+            _logger.LogWarning("NotFound");
             return Results.NotFound();
         }
         _logger.LogInformation("Retrieved");
 
         _logger.LogInformation("Download start");
-        var downloadResult = await _fileRepo.Get(invoice.Location);
+        var downloadResult = await _fileRepo.Get(url);
         var result = downloadResult switch
         {
             DownloadFailure f => Results.StatusCode(f.StatusCode),

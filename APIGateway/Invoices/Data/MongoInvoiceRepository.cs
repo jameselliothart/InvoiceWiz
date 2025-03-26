@@ -16,7 +16,7 @@ public class MongoInvoiceRepository(IMongoCollection<Invoice> _collection, ILogg
 
     public async Task<Invoice?> GetByIdAsync(Guid id)
     {
-        using (_logger.BeginScope(new Dictionary<string, object>{["invoiceId"] = id}))
+        using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = id }))
         {
             _logger.LogInformation("Retrieving");
             var invoice = await _collection.AsQueryable().Where(i => i.Id == id).FirstOrDefaultAsync();
@@ -24,5 +24,10 @@ public class MongoInvoiceRepository(IMongoCollection<Invoice> _collection, ILogg
             else _logger.LogInformation("Retrieved");
             return invoice;
         }
+    }
+
+    public Task<Uri?> GetUrlByIdAsync(Guid id)
+    {
+        throw new NotImplementedException();
     }
 }

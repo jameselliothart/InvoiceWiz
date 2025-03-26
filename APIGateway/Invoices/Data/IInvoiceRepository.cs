@@ -6,4 +6,5 @@ public interface IInvoiceRepository
 {
     Task<List<Invoice>> GetAllAsync();
     Task<Invoice?> GetByIdAsync(Guid id);
+    Task<Uri?> GetUrlByIdAsync(Guid id);
 }
