@@ -20,6 +20,7 @@ This will build and start the required services.
 - APIGateway: facilitates communication to/from the web ui
 - Persister: saves invoice details to mongo
 - Generator: creates the invoice file and saves to Azure Blob Storage (Azurite)
+- Search: retrieves invoice details from mongo
 - Web: the user-facing webpage *coming soon*
 
 Find more details on each service below.
