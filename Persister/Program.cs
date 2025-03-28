@@ -4,6 +4,8 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Persister.Invoices;
 using Serilog;
 
@@ -17,7 +19,27 @@ builder.Services.AddSingleton(sp =>
     var client = new MongoClient(connStr);
     return client.GetDatabase("InvoiceDb").GetCollection<Invoice>("invoices");
 });
+builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
+{
+    var jaegerHost = builder.Configuration["Jaeger:Host"];
+    tracerProviderBuilder
+        .AddSource("MassTransit") // MassTransit tracing
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Persister"));
 
+    if (!string.IsNullOrEmpty(jaegerHost))
+    {
+        tracerProviderBuilder.AddJaegerExporter(o =>
+        {
+            o.AgentHost = jaegerHost;
+            o.AgentPort = 6831;
+        });
+    }
+    else
+    {
+        Console.WriteLine("Falling back to console trace exporter.");
+        tracerProviderBuilder.AddConsoleExporter();
+    }
+});
 builder.Services.AddMassTransit(c =>
 {
     var config = builder.Configuration;

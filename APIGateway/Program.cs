@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
 using Serilog;
 using Search.Grpc;
 using Grpc.Net.Client;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,30 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddSignalR();
+builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
+{
+    var jaegerHost = builder.Configuration["Jaeger:Host"];
+    tracerProviderBuilder
+        .AddAspNetCoreInstrumentation() // REST endpoints
+        .AddGrpcClientInstrumentation() // gRPC to InvoiceService
+        .AddHttpClientInstrumentation() // PDF downloads
+        .AddSource("MassTransit") // MassTransit tracing
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("APIGateway"));
+
+    if (!string.IsNullOrEmpty(jaegerHost))
+    {
+        tracerProviderBuilder.AddJaegerExporter(o =>
+        {
+            o.AgentHost = jaegerHost;
+            o.AgentPort = 6831;
+        });
+    }
+    else
+    {
+        Console.WriteLine("Falling back to console trace exporter.");
+        tracerProviderBuilder.AddConsoleExporter();
+    }
+});
 builder.Services.AddMassTransit(c =>
 {
     var config = builder.Configuration;
