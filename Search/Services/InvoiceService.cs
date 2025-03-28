@@ -13,7 +13,7 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
         var invoices = await _repo.GetAllAsync();
         _logger.LogInformation("Retrieved {invoiceCount} invoices", invoices.Count);
         _logger.LogInformation("Preparing reply");
-        var invoiceOverviews = invoices.Select(SerializeToProto).Where(i => i != null).ToList();
+        var invoiceOverviews = invoices.Select(ToOverviewProto).Where(i => i != null).ToList();
         _logger.LogInformation("Reply has {protoMsgCount} invoices", invoiceOverviews.Count);
         if (invoices.Count != invoiceOverviews.Count)
             _logger.LogError(
@@ -27,7 +27,7 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
         return reply;
     }
 
-    public InvoiceOverview? SerializeToProto(Invoice invoice)
+    public InvoiceOverview? ToOverviewProto(Invoice invoice)
     {
         using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = invoice.Id }))
         {
@@ -60,6 +60,27 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
         }
     }
 
+    public GetInvoiceReply? ToInvoiceReplyProto(Invoice invoice)
+    {
+        using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = invoice.Id }))
+        {
+            _logger.LogInformation("Serializing");
+            var overview = ToOverviewProto(invoice);
+            if (overview == null)
+            {
+                _logger.LogError("Serialization failed for {invoice}", invoice);
+                return null;
+            }
+            var reply = new GetInvoiceReply
+            {
+                Overview = overview,
+                Details = invoice.Details ?? "",
+            };
+            _logger.LogInformation("Serialized {reply}", reply);
+            return reply;
+        }
+    }
+
     public override async Task<GetInvoiceReply> GetInvoice(GetInvoiceRequest request, ServerCallContext context)
     {
         using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = request.Id }))
@@ -78,11 +99,15 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
                 throw new RpcException(new Status(StatusCode.NotFound, $"Cannot find id {invoiceId}"));
             }
             _logger.LogInformation("Retrieved");
-            return new GetInvoiceReply
+            _logger.LogInformation("Preparing reply");
+            var reply = ToInvoiceReplyProto(invoice);
+            if (reply == null)
             {
-                Overview = SerializeToProto(invoice),
-                Details = invoice.Details ?? "",
-            };
+                _logger.LogError("Failed to create proto reply for {invoice}", invoice);
+                throw new RpcException(new Status(StatusCode.InvalidArgument, $"Failed to create proto reply for {invoice}"));
+            }
+            _logger.LogInformation("Prepared");
+            return reply;
         }
     }
 }
