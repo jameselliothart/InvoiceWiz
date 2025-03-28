@@ -2,14 +2,31 @@ syntax = "proto3";
 option csharp_namespace = "Search.Grpc";
 
 service InvoiceSearchService {
-  rpc GetInvoiceUrl (GetInvoiceUrlRequest) returns (GetInvoiceUrlReply);
+  rpc GetInvoice (GetInvoiceRequest) returns (GetInvoiceReply);
+  rpc GetInvoices (GetInvoicesRequest) returns (GetInvoicesReply);
 }
 
-message GetInvoiceUrlRequest {
-  string Id = 1;
-}
-
-message GetInvoiceUrlReply {
+message InvoiceOverview {
   string Id = 1;
   string Url = 2;
+  string To = 3;
+  string Amount = 4;
+  string InvoiceDate = 5;
+  string CreatedDate = 6;
+}
+
+message GetInvoiceRequest {
+  string Id = 1;
+}
+
+message GetInvoiceReply {
+  InvoiceOverview Overview = 1;
+  string Details = 2;
+}
+
+message GetInvoicesRequest {
+}
+
+message GetInvoicesReply {
+  repeated InvoiceOverview Invoices = 1;
 }
