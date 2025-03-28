@@ -45,14 +45,6 @@ builder.Services.AddCors(opt =>
             .AllowCredentials()
     );
 });
-// Register MongoDB
-builder.Services.AddSingleton(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var connStr = config.GetConnectionString("MongoDb");
-    var client = new MongoClient(connStr);
-    return client.GetDatabase("InvoiceDb").GetCollection<Invoice>("invoices");
-});
 builder.Services.AddSingleton<IInvoiceRepository, GrpcInvoiceRepository>();
 builder.Services.AddSingleton<IInvoiceFileRepository, AzureInvoiceFileRepository>();
 builder.Services.AddSingleton(sp =>

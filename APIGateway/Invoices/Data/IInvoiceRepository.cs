@@ -4,7 +4,6 @@ namespace APIGateway.Invoices.Data;
 
 public interface IInvoiceRepository
 {
-    Task<List<Invoice>> GetAllAsync();
+    Task<List<InvoiceOverviewDto>> GetAllAsync();
     Task<Invoice?> GetByIdAsync(Guid id);
-    Task<Uri?> GetUrlByIdAsync(Guid id);
 }
