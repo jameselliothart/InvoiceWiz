@@ -30,7 +30,11 @@ Route requests are configured in APIGateway.http.
 
 ### Kubernetes
 
-Coming soon!
+Manifests located in k8s folder.
+
+Notes
+
+- Get LoadBalancer url with `minikube service apigateway --url -n invoicewiz`
 
 ## Features
 
