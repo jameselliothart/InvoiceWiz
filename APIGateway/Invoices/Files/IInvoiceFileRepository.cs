@@ -2,5 +2,5 @@ namespace APIGateway.Invoices.Files;
 
 public interface IInvoiceFileRepository
 {
-    Task<IAzureResult> Get(Uri url);
+    Task<IAzureResult> Get(Guid id);
 }

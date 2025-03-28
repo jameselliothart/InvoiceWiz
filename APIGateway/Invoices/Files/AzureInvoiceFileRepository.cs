@@ -10,9 +10,11 @@ public class AzureInvoiceFileRepository(
     private const string msVersionValue = "2020-04-08";
     private const string accountName = "devstoreaccount1";
     private const string accountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+    private const string azureUrlTemplate = "http://azurite:10000/devstoreaccount1/invoices/{0}.pdf";
 
-    public async Task<IAzureResult> Get(Uri url)
+    public async Task<IAzureResult> Get(Guid id)
     {
+        var url = new Uri(string.Format(azureUrlTemplate, id));
         using (_logger.BeginScope(new Dictionary<string, object>{["url"] = url}))
         {
             _logger.LogInformation("Downloading");

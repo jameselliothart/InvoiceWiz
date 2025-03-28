@@ -133,21 +133,12 @@ app.MapGet(INVOICE_PATH + "/{id}", async (Guid id, IInvoiceRepository _repo, ILo
 .WithOpenApi();
 
 app.MapGet(INVOICE_PATH + "/{id}/download",
-    async (Guid id, IInvoiceFileRepository _fileRepo, IInvoiceRepository _repo, ILogger<Program> _logger) =>
+    async (Guid id, IInvoiceFileRepository _fileRepo, ILogger<Program> _logger) =>
 {
     using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = id }))
     {
-        _logger.LogInformation("Retrieving");
-        var url = await _repo.GetUrlByIdAsync(id);
-        if (url == null)
-        {
-            _logger.LogWarning("NotFound");
-            return Results.NotFound();
-        }
-        _logger.LogInformation("Retrieved");
-
         _logger.LogInformation("Download start");
-        var downloadResult = await _fileRepo.Get(url);
+        var downloadResult = await _fileRepo.Get(id);
         var result = downloadResult switch
         {
             DownloadFailure f => Results.StatusCode(f.StatusCode),
