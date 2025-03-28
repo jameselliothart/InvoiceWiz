@@ -6,7 +6,7 @@ namespace APIGateway.Invoices.Data;
 
 public class GrpcInvoiceRepository(InvoiceSearchService.InvoiceSearchServiceClient _client, ILogger<GrpcInvoiceRepository> _logger) : IInvoiceRepository
 {
-    public async Task<List<InvoiceOverviewDto>> GetAllAsync()
+    public async Task<List<InvoiceSummaryDto>> GetAllAsync()
     {
         try
         {
@@ -17,7 +17,7 @@ public class GrpcInvoiceRepository(InvoiceSearchService.InvoiceSearchServiceClie
             _logger.LogInformation("Deserializing");
             try
             {
-                var invoices = reply.Invoices.Select(i => new InvoiceOverviewDto(
+                var invoices = reply.Invoices.Select(i => new InvoiceSummaryDto(
                     Guid.Parse(i.Id),
                     i.To,
                     decimal.Parse(i.Amount),
@@ -51,18 +51,18 @@ public class GrpcInvoiceRepository(InvoiceSearchService.InvoiceSearchServiceClie
                 var request = new GetInvoiceRequest() { Id = id.ToString() };
                 var reply = await _client.GetInvoiceAsync(request);
                 _logger.LogInformation("Retrieved");
-                var overview = reply.Overview;
+                var summary = reply.Summary;
                 _logger.LogInformation("Deserializing {grpcReply}", reply);
                 try
                 {
                     var invoice = new Invoice(
-                        Guid.Parse(overview.Id),
-                        overview.To,
-                        decimal.Parse(overview.Amount),
-                        new Uri(overview.Url),
-                        DateTimeOffset.Parse(overview.CreatedDate),
+                        Guid.Parse(summary.Id),
+                        summary.To,
+                        decimal.Parse(summary.Amount),
+                        new Uri(summary.Url),
+                        DateTimeOffset.Parse(summary.CreatedDate),
                         reply.Details,
-                        DateOnly.Parse(overview.InvoiceDate)
+                        DateOnly.Parse(summary.InvoiceDate)
                     );
                     _logger.LogInformation("Deserialized to {invoice}", invoice);
                     return invoice;

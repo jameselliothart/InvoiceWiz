@@ -13,21 +13,21 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
         var invoices = await _repo.GetAllAsync();
         _logger.LogInformation("Retrieved {invoiceCount} invoices", invoices.Count);
         _logger.LogInformation("Preparing reply");
-        var invoiceOverviews = invoices.Select(ToOverviewProto).Where(i => i != null).ToList();
-        _logger.LogInformation("Reply has {protoMsgCount} invoices", invoiceOverviews.Count);
-        if (invoices.Count != invoiceOverviews.Count)
+        var invoiceSummarys = invoices.Select(ToSummaryProto).Where(i => i != null).ToList();
+        _logger.LogInformation("Reply has {protoMsgCount} invoices", invoiceSummarys.Count);
+        if (invoices.Count != invoiceSummarys.Count)
             _logger.LogError(
                 "There were errors serializing some invoices: {invoiceCount} vs {protoMsgCount}. Check logs.",
                 invoices.Count,
-                invoiceOverviews.Count
+                invoiceSummarys.Count
             );
         var reply = new GetInvoicesReply();
-        reply.Invoices.AddRange(invoiceOverviews);
+        reply.Invoices.AddRange(invoiceSummarys);
         _logger.LogInformation("Prepared reply");
         return reply;
     }
 
-    public InvoiceOverview? ToOverviewProto(Invoice invoice)
+    public InvoiceSummary? ToSummaryProto(Invoice invoice)
     {
         using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = invoice.Id }))
         {
@@ -40,17 +40,17 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
                 var amount = invoice.Amount.ToString("G29");
                 var invoiceDate = invoice.InvoiceDate.ToString("yyyy-MM-dd");
                 var createdDate = invoice.CreatedDate.ToString("o");
-                var overview = new InvoiceOverview
-                    {
-                        Id = id,
-                        Url = url,
-                        To = to,
-                        Amount = amount,
-                        InvoiceDate = invoiceDate,
-                        CreatedDate = createdDate,
-                    };
+                var summary = new InvoiceSummary
+                {
+                    Id = id,
+                    Url = url,
+                    To = to,
+                    Amount = amount,
+                    InvoiceDate = invoiceDate,
+                    CreatedDate = createdDate,
+                };
                 _logger.LogInformation("Serialized");
-                return overview;
+                return summary;
             }
             catch (Exception ex)
             {
@@ -65,15 +65,15 @@ public class InvoiceService(IInvoiceRepository _repo, ILogger<InvoiceService> _l
         using (_logger.BeginScope(new Dictionary<string, object> { ["invoiceId"] = invoice.Id }))
         {
             _logger.LogInformation("Serializing");
-            var overview = ToOverviewProto(invoice);
-            if (overview == null)
+            var summary = ToSummaryProto(invoice);
+            if (summary == null)
             {
                 _logger.LogError("Serialization failed for {invoice}", invoice);
                 return null;
             }
             var reply = new GetInvoiceReply
             {
-                Overview = overview,
+                Summary = summary,
                 Details = invoice.Details ?? "",
             };
             _logger.LogInformation("Serialized {reply}", reply);
