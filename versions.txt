@@ -1,0 +1,4 @@
+APIGateway/Dockerfile:apigateway:0.0.0
+Generator/Dockerfile:generator:0.0.0
+Persister/Dockerfile:persister:0.0.0
+Search/Dockerfile:search:0.0.0
