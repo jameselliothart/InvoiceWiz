@@ -12,6 +12,7 @@ using Search.Grpc;
 using Grpc.Net.Client;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Exporter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,20 +33,13 @@ builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
         .AddGrpcClientInstrumentation() // gRPC to InvoiceService
         .AddHttpClientInstrumentation() // PDF downloads
         .AddSource("MassTransit") // MassTransit tracing
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("APIGateway"));
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("APIGateway"))
+        .AddConsoleExporter();
 
     if (!string.IsNullOrEmpty(jaegerHost))
     {
-        tracerProviderBuilder.AddJaegerExporter(o =>
-        {
-            o.AgentHost = jaegerHost;
-            o.AgentPort = 6831;
-        });
-    }
-    else
-    {
-        Console.WriteLine("Falling back to console trace exporter.");
-        tracerProviderBuilder.AddConsoleExporter();
+        Console.WriteLine("Adding Jaeger OtlpExporter");
+        tracerProviderBuilder.AddOtlpExporter(o => { o.Endpoint = new Uri(jaegerHost); o.Protocol = OtlpExportProtocol.Grpc; });
     }
 });
 builder.Services.AddMassTransit(c =>

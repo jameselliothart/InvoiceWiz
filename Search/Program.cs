@@ -3,6 +3,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Search.DataAccess;
@@ -30,20 +31,13 @@ builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
     var jaegerHost = builder.Configuration["Jaeger:Host"];
     tracerProviderBuilder
         .AddAspNetCoreInstrumentation() // gRPC server
-        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Search"));
+        .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Search"))
+        .AddConsoleExporter();
 
     if (!string.IsNullOrEmpty(jaegerHost))
     {
-        tracerProviderBuilder.AddJaegerExporter(o =>
-        {
-            o.AgentHost = jaegerHost;
-            o.AgentPort = 6831;
-        });
-    }
-    else
-    {
-        Console.WriteLine("Falling back to console trace exporter.");
-        tracerProviderBuilder.AddConsoleExporter();
+        Console.WriteLine("Adding Jaeger OtlpExporter");
+        tracerProviderBuilder.AddOtlpExporter(o => { o.Endpoint = new Uri(jaegerHost); o.Protocol = OtlpExportProtocol.Grpc; });
     }
 });
 var app = builder.Build();

@@ -20,3 +20,6 @@ spec:
         imagePullPolicy: Never  # Use local image only
         ports:
         - containerPort: 8080
+        env:
+        - name: Jaeger__Host
+          value: "http://jaeger:4317"

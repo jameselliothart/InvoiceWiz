@@ -18,3 +18,6 @@ spec:
       - name: persister
         image: persister:latest  # Build this locally first
         imagePullPolicy: Never  # Use local image only
+        env:
+        - name: Jaeger__Host
+          value: "http://jaeger:4317"
