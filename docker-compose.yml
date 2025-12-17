@@ -4,7 +4,7 @@ services:
     container_name: mongodb
     restart: always
     ports:
-      - '27017:27017'
+      - "27017:27017"
     volumes:
       - ./db:/data/db
     networks:
@@ -81,8 +81,8 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite
     container_name: azurite
     ports:
-      - "10000:10000"  # Blob service port
-    command: "azurite-blob --blobHost 0.0.0.0 --loose"  # Run blob service only, relaxed parsing
+      - "10000:10000" # Blob service port
+    command: "azurite-blob --blobHost 0.0.0.0 --loose" # Run blob service only, relaxed parsing
     networks:
       - app-network
 
