@@ -22,7 +22,8 @@ export default function SignalRProvider({ children }) {
       console.log(`${RTMethod}: ${id} : ${location}`);
       // If no current id is tracked, still set download if present
       if (!currentId || id === currentId) {
-        dispatch(setDownloadUrl(location));
+        const downloadUrl = `/api/invoices/${id}/download`;
+        dispatch(setDownloadUrl(downloadUrl));
       }
     });
 
