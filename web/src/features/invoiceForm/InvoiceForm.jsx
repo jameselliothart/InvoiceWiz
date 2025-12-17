@@ -41,13 +41,6 @@ function InvoiceForm() {
         setStatusMessage("Invoice request submitted.");
         // track current invoice id in store so SignalR can match
         if (payload.id) dispatch(setCurrentInvoiceId(payload.id));
-        // Try to parse a returned location (if the API includes it)
-        // try {
-        //   const json = await res.json().catch(() => null);
-        //   if (json && (json.location || json.locationUri || json.uri)) {
-        //     setDownloadUrl(json.location || json.locationUri || json.uri);
-        //   }
-        // } catch {}
       } else {
         const text = await res.text().catch(() => "");
         setStatusMessage(`Request failed: ${res.status} ${text}`);
