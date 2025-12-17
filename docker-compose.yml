@@ -86,6 +86,17 @@ services:
     networks:
       - app-network
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    depends_on:
+      - apigateway
+
 networks:
   app-network:
     driver: bridge
