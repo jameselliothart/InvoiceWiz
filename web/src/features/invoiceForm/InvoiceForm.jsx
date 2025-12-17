@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentInvoiceId } from "./invoiceSlice";
+import { setDownloadUrl as setDownloadUrlAction } from "./downloadUrlSlice";
 
 function InvoiceForm() {
   const [invoiceTo, setInvoiceTo] = useState("");
@@ -6,14 +9,15 @@ function InvoiceForm() {
   const [invoiceAmount, setInvoiceAmount] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState("");
+  const dispatch = useDispatch();
+  const downloadUrl = useSelector((s) => s.downloadUrl.value);
   const [statusMessage, setStatusMessage] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setIsSubmitting(true);
     setStatusMessage("");
-    setDownloadUrl("");
+    dispatch(setDownloadUrlAction(null));
 
     const payload = {
       id:
@@ -35,6 +39,8 @@ function InvoiceForm() {
 
       if (res.ok) {
         setStatusMessage("Invoice request submitted.");
+        // track current invoice id in store so SignalR can match
+        if (payload.id) dispatch(setCurrentInvoiceId(payload.id));
         // Try to parse a returned location (if the API includes it)
         // try {
         //   const json = await res.json().catch(() => null);
