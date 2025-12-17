@@ -20,6 +20,18 @@ services:
     networks:
       - app-network
 
+  jaeger:
+    image: jaegertracing/jaeger:2.4.0
+    hostname: jaeger
+    container_name: jaeger
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+      - "4317:4317"
+      - "14250:14250"
+    networks:
+      - app-network
+
   apigateway:
     build:
       context: .
@@ -31,6 +43,7 @@ services:
     depends_on:
       - broker
       - mongodb
+      - jaeger
 
   persister:
     build:
@@ -41,6 +54,7 @@ services:
     depends_on:
       - broker
       - mongodb
+      - jaeger
 
   search:
     build:
@@ -50,6 +64,7 @@ services:
       - app-network
     depends_on:
       - mongodb
+      - jaeger
 
   generator:
     build:
@@ -60,6 +75,7 @@ services:
     depends_on:
       - broker
       - azurite
+      - jaeger
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
