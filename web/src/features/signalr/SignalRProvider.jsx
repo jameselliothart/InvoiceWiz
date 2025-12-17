@@ -5,6 +5,7 @@ import { setDownloadUrl } from "../invoiceForm/downloadUrlSlice";
 
 // SignalR base path - rely on proxy or same origin /invoiceHub
 const HUB_URL = "/invoiceHub";
+const RTMethod = "InvoiceGenerated";
 
 export default function SignalRProvider({ children }) {
   const dispatch = useDispatch();
@@ -17,8 +18,8 @@ export default function SignalRProvider({ children }) {
       .withAutomaticReconnect()
       .build();
 
-    connection.on("ReceiveInvoice", (id, location) => {
-      console.log(`ReceiveInvoice: ${id} : ${location}`);
+    connection.on(RTMethod, (id, location) => {
+      console.log(`${RTMethod}: ${id} : ${location}`);
       // If no current id is tracked, still set download if present
       if (!currentId || id === currentId) {
         dispatch(setDownloadUrl(location));
