@@ -12,7 +12,18 @@ export default function InvoiceGrid() {
 
   return (
     <div className="mt-4">
-      <h2>Past Invoices</h2>
+      <div className="d-flex align-items-center justify-content-between">
+        <h2 className="mb-0">Past Invoices</h2>
+        <div>
+          <button
+            className="btn btn-sm btn-outline-secondary"
+            onClick={() => dispatch(fetchInvoices())}
+            disabled={loading}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
+      </div>
       {loading && <div>Loading...</div>}
       {error && <div className="text-danger">Error: {error}</div>}
       {!loading && !error && (
