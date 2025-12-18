@@ -2,6 +2,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import InvoiceForm from './features/invoiceForm/InvoiceForm'
+import InvoiceGrid from './features/invoiceGrid/InvoiceGrid'
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
       </div>
       <h1>Welcome to Invoice Wizard</h1>
       <InvoiceForm />
+      <InvoiceGrid />
     </>
   )
 }
