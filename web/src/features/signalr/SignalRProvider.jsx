@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import * as signalR from "@microsoft/signalr";
 import { useDispatch, useSelector } from "react-redux";
 import { setDownloadUrl } from "../invoiceForm/downloadUrlSlice";
+import { fetchInvoices } from "../invoiceGrid/invoicesSlice";
+import { resetCurrentInvoiceId } from "../invoiceForm/invoiceSlice";
 
 // SignalR base path - rely on proxy or same origin /invoiceHub
 const HUB_URL = "/invoiceHub";
@@ -20,10 +22,14 @@ export default function SignalRProvider({ children }) {
 
     connection.on(RTMethod, (id, location) => {
       console.log(`${RTMethod}: ${id} : ${location}`);
-      // If no current id is tracked, still set download if present
+      // Only refresh when the event matches the currently tracked invoice (if set)
       if (!currentId || id === currentId) {
         const downloadUrl = `/api/invoices/${id}/download`;
         dispatch(setDownloadUrl(downloadUrl));
+        // Refresh invoice list so UI reflects generated location
+        dispatch(fetchInvoices());
+        // Clear the tracked id so future events don't get dropped
+        if (currentId) dispatch(resetCurrentInvoiceId());
       }
     });
 
