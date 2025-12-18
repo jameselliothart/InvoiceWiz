@@ -54,6 +54,9 @@ function InvoiceForm() {
 
   return (
     <div className="tab-pane fade show active" id="form" role="tabpanel">
+      <div className="d-flex">
+        <h2 className="mb-0">Create an Invoice</h2>
+      </div>
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
           <label htmlFor="invoiceTo" className="form-label">
