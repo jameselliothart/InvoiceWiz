@@ -1,10 +1,9 @@
-import viteLogo from '/vite.svg'
-import './App.css'
-import InvoiceForm from './features/invoiceForm/InvoiceForm'
-import InvoiceGrid from './features/invoiceGrid/InvoiceGrid'
+import viteLogo from "/vite.svg";
+import "./App.css";
+import InvoiceForm from "./features/invoiceForm/InvoiceForm";
+import InvoiceGrid from "./features/invoiceGrid/InvoiceGrid";
 
 function App() {
-
   return (
     <div className="container mt-4">
       <div className="row justify-content-center">
@@ -20,7 +19,7 @@ function App() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
