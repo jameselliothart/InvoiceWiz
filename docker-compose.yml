@@ -44,6 +44,8 @@ services:
       - broker
       - mongodb
       - jaeger
+    environment:
+      - Jaeger__Host=http://jaeger:4317
 
   persister:
     build:
@@ -55,6 +57,8 @@ services:
       - broker
       - mongodb
       - jaeger
+    environment:
+      - Jaeger__Host=http://jaeger:4317
 
   search:
     build:
@@ -65,6 +69,8 @@ services:
     depends_on:
       - mongodb
       - jaeger
+    environment:
+      - Jaeger__Host=http://jaeger:4317
 
   generator:
     build:
@@ -76,6 +82,8 @@ services:
       - broker
       - azurite
       - jaeger
+    environment:
+      - Jaeger__Host=http://jaeger:4317
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
