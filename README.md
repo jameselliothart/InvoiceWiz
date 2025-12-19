@@ -1,77 +1,80 @@
 # InvoiceWiz
 
-An app for generating pdf invoices.
+A small demo microservices app that generates PDF invoices. Designed as a portfolio project to demonstrate event-driven architecture with OpenTelemetry tracing, SignalR realtime updates, and a small React frontend.
 
-## Running
+## Architecture & Components
 
-### Docker
+- APIGateway (C#): HTTP entry point (`/api/invoices`), SignalR hub (`/invoiceHub`), publishes `InvoiceRequestedEvent` and receives `InvoiceGeneratedEvent`.
+- Generator (C#): consumes invoice requests, generates PDF, stores to Azure Blob (Azurite in dev), publishes generated event.
+- Persister (C#): stores invoice metadata in MongoDB and updates records with storage location when generation completes.
+- Search (C#): exposes read-only access to invoices (used by APIGateway via gRPC).
+- Web (React + Vite): UI that posts invoice requests, listens for SignalR notifications and shows download link.
+- Infrastructure: RabbitMQ (MassTransit), MongoDB, Azurite (blob storage), Jaeger for tracing.
 
-In the project root execute:
-
-```sh
-docker compose up --build
-```
-
-This will build and start the required services.
-
-- MongoDb: persistence for invoice details
-- RabbitMQ: facilitates microservice communication via MassTransit
-- Azurite: for mocking Azure Blob Storage
-- APIGateway: facilitates communication to/from the web ui
-- Persister: saves invoice details to mongo
-- Generator: creates the invoice file and saves to Azure Blob Storage (Azurite)
-- Search: retrieves invoice details from mongo
-- Web: the user-facing webpage *coming soon*
-
-Find more details on each service below.
-
-The APIGateway will be available on http://localhost:8080.
-Route requests are configured in APIGateway.http.
-
-### Kubernetes
-
-Manifests located in k8s folder.
-
-Notes
-
-- Get LoadBalancer url with `minikube service apigateway --url -n invoicewiz`
+Contracts are in `Contracts/` (see `Contracts/Events.cs` and `Contracts/Invoice.cs`).
 
 ## Features
 
-### Web UI - TODO
+- Submit invoice requests from the web UI
+- Asynchronous PDF generation with event-driven flow (RabbitMQ + MassTransit)
+- Real-time notification via SignalR when PDF is ready; toast + download link
+- Persistent invoice metadata in MongoDB; historical list in the UI
 
-- Displays a form to gather invoice details
-- Once details are entered, click Generate to start invoice generation
-- When the invoice is ready a toast message notifies the user
-  - Clicking the toast message will start the download
-  - The Download button is also enabled for after the toast disappears
-- Uses uuid.v6 for ordered uuid for more efficient indexing in mongodb
-- TODO: Validation
+## Running
 
-### APIGateway
+### Docker Compose
 
-- Requesting invoices
-  - Receives POST requests of the invoice details
-  - Publishes these details to the message broker for consumption by downstream services
-- Generated invoices
-  - Subscribes to invoice generated messages
-  - Notifies the web ui of generated invoices via SignalR connection
-- Historical invoices
-  - Retrieves all past invoices for grid display
-  - Retrieve by id for individual details
+Quick start (builds local images and runs all services):
 
-### Persister
+```bash
+docker compose up --build
+```
 
-- Subscribes to Invoice Requested messages -> Saves the requested invoices details to mongodb
-- Subscribes to Invoice Generated messages -> Updates the invoice detail record with its saved location
+Services started by compose:
+- `apigateway` on `localhost:8080`
+- `web` on `localhost:3000`
+- `mongodb`, `broker` (RabbitMQ), `generator`, `persister`, `search`, `azurite`, `jaeger`
 
-### Generator
+Useful commands
+```bash
+# view logs
+docker compose logs -f apigateway
+docker compose logs -f web
 
-- Subscribes to invoice requested messages
-- Generates invoices with the requested details
-- Saves the invoices to Azure Blob Storage (Azurite mock)
-- Publishes an invoice generated message
+# rebuild just the web image
+docker compose build --no-cache web
+```
 
-## Design Decisions
+Notes
+- The APIGateway exposes endpoints under `/api/` (see `APIGateway/APIGateway.http` for examples).
+- SignalR hub is mounted at `/invoiceHub` and the frontend listens for generated invoice events.
 
-This project relies on a number of microservices to accomplish several disparate tasks.
+### Running the Web frontend (development)
+
+For iterative frontend development with HMR:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+By default the frontend expects the APIGateway to be reachable at `/api`. In Docker/K8s the nginx proxy is configured to forward `/api` and `/invoiceHub` to the APIGateway service.
+
+### Kubernetes
+
+Manifests live under `k8s/`. To run on a local cluster (minikube):
+
+```bash
+# build images and load into minikube if needed
+docker build -t apigateway:0.0.2 -f APIGateway/Dockerfile .
+docker build -t web:0.0.1 -f web/Dockerfile ./web
+
+kubectl apply -f k8s/
+
+# get external URL (minikube)
+minikube service apigateway --url
+```
+
+Notes on runtime config
+- The `web` manifest sets `VITE_API_URL` to `http://apigateway:8080/api` for convenience. Because the frontend is a static build, environment changes at runtime require a small runtime injection step (or build-time substitution) if you need to change the API host after building the image.
