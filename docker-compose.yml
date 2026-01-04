@@ -38,6 +38,8 @@ services:
       dockerfile: APIGateway/Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ./logs:/logs
     networks:
       - app-network
     depends_on:
@@ -51,6 +53,9 @@ services:
     build:
       context: .
       dockerfile: Persister/Dockerfile
+    volumes:
+      - ./logs:/logs
+
     networks:
       - app-network
     depends_on:
@@ -64,6 +69,9 @@ services:
     build:
       context: .
       dockerfile: Search/Dockerfile
+    volumes:
+      - ./logs:/logs
+
     networks:
       - app-network
     depends_on:
@@ -76,6 +84,9 @@ services:
     build:
       context: .
       dockerfile: Generator/Dockerfile
+    volumes:
+      - ./logs:/logs
+
     networks:
       - app-network
     depends_on:
@@ -104,6 +115,40 @@ services:
       - app-network
     depends_on:
       - apigateway
+
+  loki:
+    image: grafana/loki:2.8.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    networks:
+      - app-network
+
+  promtail:
+    image: grafana/promtail:2.8.2
+    container_name: promtail
+    volumes:
+      - ./deploy/promtail-config.yml:/etc/promtail/promtail.yml
+      - ./logs:/logs
+    networks:
+      - app-network
+    depends_on:
+      - loki
+    command: -config.file=/etc/promtail/promtail.yml
+
+  grafana:
+    image: grafana/grafana:9.4.0
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - app-network
+    depends_on:
+      - loki
 
 networks:
   app-network:
