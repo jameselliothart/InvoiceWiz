@@ -1,6 +1,7 @@
 # InvoiceWiz
 
 A small demo microservices app that generates PDF invoices. Designed as a portfolio project to demonstrate event-driven architecture with OpenTelemetry tracing, SignalR realtime updates, and a small React frontend.
+See the [walkthrough](demo/demo.md) for the full functionality with screenshots.
 
 ## Architecture & Components
 
