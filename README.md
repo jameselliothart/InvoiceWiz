@@ -10,7 +10,7 @@ See the [walkthrough](demo/demo.md) for the full functionality with screenshots.
 - Persister (C#): stores invoice metadata in MongoDB and updates records with storage location when generation completes.
 - Search (C#): exposes read-only access to invoices (used by APIGateway via gRPC).
 - Web (React + Vite): UI that posts invoice requests, listens for SignalR notifications and shows download link.
-- Infrastructure: RabbitMQ (MassTransit), MongoDB, Azurite (blob storage), Jaeger for tracing.
+- Infrastructure: RabbitMQ (MassTransit), MongoDB, Azurite (blob storage), Jaeger for tracing, Promtail/Loki/Grafana for log aggregation.
 
 Contracts are in `Contracts/` (see `Contracts/Events.cs` and `Contracts/Invoice.cs`).
 
@@ -34,7 +34,7 @@ docker compose up --build
 Services started by compose:
 - `apigateway` on `localhost:8080`
 - `web` on `localhost:3000`
-- `mongodb`, `broker` (RabbitMQ), `generator`, `persister`, `search`, `azurite`, `jaeger`
+- `mongodb`, `broker` (RabbitMQ), `generator`, `persister`, `search`, `azurite`, `jaeger`, `promtail`, `loki`, `grafana`
 
 Useful commands
 ```bash
